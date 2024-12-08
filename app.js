@@ -46,7 +46,7 @@ const CURRENCY_SYMBOLS = {
 };
 
 
-/* 
+/**
  * Gets name arg from the --name flag.
  *
  * @returns {string}
@@ -70,7 +70,7 @@ function getNameArg() {
     return nameVal.trim()
 }
 
-/* 
+/**
  * Gets environment variables for required fields
  *
  * @returns {Env}
@@ -197,7 +197,7 @@ function sortProductData(formattedProductData) {
 }
 
 
-/* 
+/**
  * References a currency symbol table for code to symbol
  *
  * @param {string} currency code 
