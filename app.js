@@ -199,7 +199,8 @@ function getCurrencySymbol(currencyCode) {
 }
 
 /* 
- * References a currency symbol table for code to symbol
+ * Displays our prouduct information.
+ * If no data is returned from Shopify or the previous functions, displays a friendly message informing the user.
  *
  * @param {[productData]} The sorted and formatted product data.
  * @param {name} search term
