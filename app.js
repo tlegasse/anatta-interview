@@ -4,9 +4,18 @@ import '@shopify/shopify-api/adapters/node'
 import {createStorefrontApiClient} from '@shopify/storefront-api-client';
 
 
-/*
- * typedef {{STORE_DOMAIN: string, API_VERSION: string, STOREFRONT_TOKEN: string}} Env
- * typedef {{title: string, price: number, currencyCode: string}} ProductVariant
+/**
+ * @typedef {Object} Env
+ * @property {string} STORE_DOMAIN
+ * @property {string} API_VERSION
+ * @property {string} STOREFRONT_TOKEN
+ */
+
+/**
+ * @typedef {Object} ProductVariant
+ * @property {string} title
+ * @property {number} price
+ * @property {string} currencyCode
  */
 
 
@@ -91,12 +100,11 @@ function getEnv() {
 }
 
 
-/* 
- * Gets storefront API GraphQL client
+/**
+ * Gets storefront API GraphQL client.
  *
- * @param {Env}
- *
- * @returns {object} representing the GraphQL client
+ * @param {Env} env - Environment configuration
+ * @returns {import('@shopify/storefront-api-client').StorefrontClient} GraphQL client instance
  */
 function setupGraphQlClient(env) {
     return createStorefrontApiClient({
@@ -107,15 +115,13 @@ function setupGraphQlClient(env) {
 }
 
 
-/* 
- * Gets product data from Shopify query
+/**
+ * Gets product data from Shopify query.
  *
- * @param {object} GraphQL client
- * @param {string} search value from --name flag
- *
- * @throws GraphQL exception messages
- *
- * @returns {object} data segment of the Shopify data query
+ * @param {import('@shopify/storefront-api-client').StorefrontClient} client - GraphQL client instance
+ * @param {string} name - Search value from --name flag
+ * @throws {Error} GraphQL exception messages
+ * @returns {Promise<object>} Data segment of the Shopify data query
  */
 async function getProductData(client, name) {
     const productQuery = `
@@ -158,12 +164,11 @@ async function getProductData(client, name) {
 }
 
 
-/* 
- * Formats an array of Shopify product variants' basic information
+/**
+ * Formats an array of Shopify product variants' basic information.
  *
- * @param {object} Product data as returned by Shopify
- *
- * @returns {[ProductVariant]} formatted product information
+ * @param {object} productData - Product data as returned by Shopify
+ * @returns {Array<ProductVariant>} Formatted product information
  */
 function formatProductData(productData) {
     const formattedProductData = []
@@ -181,12 +186,11 @@ function formatProductData(productData) {
     return formattedProductData
 }
 
-/* 
- * Sorts formatted product data
+/**
+ * Sorts formatted product data by price.
  *
- * @param {[ProductVariant]} formatted product data
- *
- * @returns {[ProductVariant]} formatted product information
+ * @param {Array<ProductVariant>} formattedProductData - Formatted product data
+ * @returns {Array<ProductVariant>} Sorted product information
  */
 function sortProductData(formattedProductData) {
     return [...formattedProductData].sort((a, b) => a.price - b.price);
@@ -204,12 +208,13 @@ function getCurrencySymbol(currencyCode) {
     return CURRENCY_SYMBOLS[currencyCode] || '$'
 }
 
-/* 
- * Displays our product information.
- * If no data is returned from Shopify or the previous functions, displays a friendly message informing the user.
+/**
+ * Displays product information.
+ * If no data is returned from Shopify or the previous functions, displays a friendly message.
  *
- * @param {[productData]} The sorted and formatted product data.
- * @param {name} search term
+ * @param {Array<ProductVariant>} productData - The sorted and formatted product data
+ * @param {string} name - Search term used
+ * @returns {void}
  */
 function displayProductData(productData, name) {
     if (!productData.length) {
@@ -223,8 +228,8 @@ function displayProductData(productData, name) {
 }
 
 
-/*
- * Mainnnnnnnnn
+/**
+ * Main
  * Controls high level flow of the application
  */
 async function main() {
