@@ -1,4 +1,9 @@
 import 'dotenv/config'
+import '@shopify/shopify-api/adapters/node'
+
+import {createStorefrontApiClient} from '@shopify/storefront-api-client';
+
+import nodeFetch from 'node-fetch';
 
 /*
  * @typeDef {{
@@ -7,6 +12,9 @@ import 'dotenv/config'
  *     STOREFRONT_TOKEN: string
  * }} Env
  */
+
+const scopes = ['read_products']
+const apiVersion = "2024-10"
 
 /*
  * @return string
@@ -53,5 +61,37 @@ function getEnv() {
     }
 }
 
-console.log(getNameArg())
-console.log(getEnv())
+/*
+ *
+ */
+function setupGraphQlClient() {
+    const client = createStorefrontApiClient({
+        storeDomain: 'http://your-shop-name.myshopify.com',
+        apiVersion: apiVersion,
+        publicAccessToken: 'your-storefront-public-access-token',
+        CustomFetchApi: nodeFetch
+    });
+
+    return client
+}
+
+/*
+ *
+ */
+function getProductData() {
+
+}
+
+function main() {
+    try {
+        const name = getNameArg()
+        const env = getEnv()
+
+        const graphQlClient = setupGraphQlClient()
+
+    } catch(e) {
+        console.error(e)
+    }
+}
+
+main()

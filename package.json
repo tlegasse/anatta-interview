@@ -14,7 +14,10 @@
     "jest": "^29.7.0"
   },
   "dependencies": {
-    "dotenv": "^16.4.7"
+    "@shopify/shopify-api": "^11.6.1",
+    "@shopify/storefront-api-client": "^1.0.3",
+    "dotenv": "^16.4.7",
+    "node-fetch": "^3.3.2"
   },
   "type": "module"
 }
