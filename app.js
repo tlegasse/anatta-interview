@@ -3,10 +3,12 @@ import '@shopify/shopify-api/adapters/node'
 
 import {createStorefrontApiClient} from '@shopify/storefront-api-client';
 
+
 /*
  * typedef {{STORE_DOMAIN: string, API_VERSION: string, STOREFRONT_TOKEN: string}} Env
- * typedef {{title: string, price: number, currencyCode: string} ProductVariant
+ * typedef {{title: string, price: number, currencyCode: string}} ProductVariant
  */
+
 
 const PRODUCT_LIMIT = 250
 const VARIANT_LIMIT = 250
@@ -34,6 +36,7 @@ const CURRENCY_SYMBOLS = {
     'THB': '฿'
 };
 
+
 /* 
  * Gets name arg from the --name flag.
  *
@@ -46,20 +49,20 @@ function getNameArg() {
     const nameFlagIndex = process.argv.findIndex(arg => arg == '--name')
 
     if (nameFlagIndex < 0) {
-        throw new Error("Please provide a --name value")
+        throw new Error('Please provide a --name value')
     }
 
     const nameVal = process.argv[nameFlagIndex + 1]
 
     if (!nameVal || nameVal.startsWith('--')) {
-        throw new Error("--name flag present, but value could not be found")
+        throw new Error('--name flag present, but value could not be found')
     }
 
     return nameVal.trim()
 }
 
 /* 
- * Gets envirenment variables for required fields
+ * Gets environment variables for required fields
  *
  * @returns {Env}
  *
@@ -87,6 +90,7 @@ function getEnv() {
     }
 }
 
+
 /* 
  * Gets storefront API GraphQL client
  *
@@ -101,6 +105,7 @@ function setupGraphQlClient(env) {
         publicAccessToken: env.STOREFRONT_TOKEN
     });
 }
+
 
 /* 
  * Gets product data from Shopify query
@@ -152,6 +157,7 @@ async function getProductData(client, name) {
     return data
 }
 
+
 /* 
  * Formats an array of Shopify product variants' basic information
  *
@@ -165,7 +171,7 @@ function formatProductData(productData) {
     for (const product of productData.products.edges) {
         for (const variant of product.node.variants.edges) {
             formattedProductData.push({
-                title: product.node.title + " - " + variant.node.title,
+                title: product.node.title + ' - ' + variant.node.title,
                 price: parseFloat(variant.node.priceV2.amount).toFixed(2),
                 currencyCode: variant.node.priceV2.currencyCode
             })
@@ -186,6 +192,7 @@ function sortProductData(formattedProductData) {
     return [...formattedProductData].sort((a, b) => a.price - b.price);
 }
 
+
 /* 
  * References a currency symbol table for code to symbol
  *
@@ -194,7 +201,7 @@ function sortProductData(formattedProductData) {
  * @returns {string} symbol
  */
 function getCurrencySymbol(currencyCode) {
-    return CURRENCY_SYMBOLS[currencyCode] || "$"
+    return CURRENCY_SYMBOLS[currencyCode] || '$'
 }
 
 /* 
@@ -215,6 +222,7 @@ function displayProductData(productData, name) {
     }
 }
 
+
 /*
  * Mainnnnnnnnn
  * Controls high level flow of the application
@@ -231,7 +239,7 @@ async function main() {
         // Gathering product data
         const productData = await getProductData(graphQlClient, name)
          
-        // Foramtting and sorting
+        // Formatting and sorting
         const formattedProductData = formatProductData(productData)
         const sortedProductData = sortProductData(formattedProductData)
 
