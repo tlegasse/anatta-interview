@@ -1,0 +1,12 @@
+{
+  "name": "anatta-interview",
+  "version": "1.0.0",
+  "description": "An interview challenge for Anatta",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "Tanner Legasse",
+  "license": "ISC"
+}
