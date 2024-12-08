@@ -1,24 +1,34 @@
 import 'dotenv/config'
 import '@shopify/shopify-api/adapters/node'
-
 import {createStorefrontApiClient} from '@shopify/storefront-api-client';
-
 import nodeFetch from 'node-fetch';
 
-/*
- * @typeDef {{
- *     STORE_DOMAIN: string,
- *     ADMIN_TOKEN: string,
- *     STOREFRONT_TOKEN: string
- * }} Env
- */
-
-const scopes = ['read_products']
 const apiVersion = "2024-10"
+const PRODUCT_LIMIT = 250
+const VARIANT_LIMIT = 250
+const CURRENCY_SYMBOLS = {
+  'USD': '$',
+  'EUR': '€',
+  'GBP': '£',
+  'JPY': '¥',
+  'CAD': 'C$',
+  'AUD': 'A$',
+  'CNY': '¥',
+  'INR': '₹',
+  'NZD': 'NZ$',
+  'CHF': 'Fr.',
+  'HKD': 'HK$',
+  'SGD': 'S$',
+  'SEK': 'kr',
+  'KRW': '₩',
+  'BRL': 'R$',
+  'RUB': '₽',
+  'ZAR': 'R',
+  'MXN': 'Mex$',
+  'PLN': 'zł',
+  'THB': '฿'
+};
 
-/*
- * @return string
- */
 function getNameArg() {
     const nameFlagIndex = process.argv.findIndex(arg => arg == '--name')
 
@@ -28,17 +38,13 @@ function getNameArg() {
 
     const nameVal = process.argv[nameFlagIndex + 1]
 
-    if (nameVal == undefined) {
+    if (!nameVal || nameVal.startsWith('--')) {
         throw new Error("Name value could not be found")
     }
 
-    return nameVal
+    return nameVal.trim()
 }
 
-// Gather dotenv
-/*
- * @return Env
- */
 function getEnv() {
     const env = process.env
 
@@ -61,37 +67,30 @@ function getEnv() {
     }
 }
 
-/*
- *
- */
 function setupGraphQlClient(env) {
-    const client = createStorefrontApiClient({
-        storeDomain: env.STORE_DOMAIN,
+    return createStorefrontApiClient({
         apiVersion: apiVersion,
+        storeDomain: env.STORE_DOMAIN,
         publicAccessToken: env.STOREFRONT_TOKEN,
         CustomFetchApi: nodeFetch
     });
-
-    return client
 }
 
-/*
- * 
- */
 async function getProductData(client, name) {
     const productQuery = `
-        {
-            products(first: 10, query:"title:${name}*") {
+        query getProducts($searchQuery: String!) {
+            products(first: ${PRODUCT_LIMIT}, query: $searchQuery) {
                 edges {
                     node {
                         title
-                        variants(first: 250) {
+                        variants(first: ${VARIANT_LIMIT}) {
                             edges {
                                 node {
                                     id
                                     title
                                     priceV2 {
                                         amount
+                                        currencyCode
                                     }
                                 }
                             }
@@ -104,31 +103,28 @@ async function getProductData(client, name) {
 
     const {data, errors, extensions} = await client.request(productQuery, {
         variables: {
-            name: name,
+            searchQuery: `title:${name}*`,
         },
     });
 
     if (errors?.graphQLErrors) {
         throw new Error(
-            'There was an error while processing this request: ' +
-            JSON.stringify(errors)
+            `GraphQL Errors: ${errors.graphQLErrors.map(e => e.message).join(', ')}`
         )
     }
 
     return data
 }
 
-/*
- *
- */
-async function getFormattedProductData(productData) {
+function getFormattedProductData(productData) {
     const formattedProductData = []
 
     for (const product of productData.products.edges) {
         for (const variant of product.node.variants.edges) {
             formattedProductData.push({
-                title: product.node.title + ' ' + variant.node.title,
-                price: parseFloat(variant.node.priceV2.amount)
+                title: product.node.title + " - " + variant.node.title,
+                price: parseFloat(variant.node.priceV2.amount),
+                currencyCode: variant.node.priceV2.currencyCode
             })
         }
     }
@@ -136,39 +132,40 @@ async function getFormattedProductData(productData) {
     return formattedProductData
 }
 
-async function getSortedProductData(formattedProductData) {
-    const compareFn = function(a, b) {
-        if (a.price < b.price) {
-            return -1;
-        } else if (b.price < a.price) {
-            return 1;
-        }
-        // a must be equal to b
-        return 0;
+function sortProductData(formattedProductData) {
+    return [...formattedProductData].sort((a, b) => a.price - b.price);
+}
+
+function getCurrencySymbol(currencyCode) {
+    return CURRENCY_SYMBOLS[currencyCode] || "$"
+}
+
+function displayProductData(productData, name) {
+    if (!productData.length) {
+        console.log(`No prouduct data was found for the search string: ${name}`)
+        return
     }
 
-    console.log(formattedProductData)
-
-    return formattedProductData.sort(compareFn) 
+    for (const product of productData) {
+        console.log(`${product.title} - price ${getCurrencySymbol(product.currencyCode)}${product.price}`)
+    }
 }
 
 async function main() {
     try {
         const name = getNameArg()
         const env = getEnv()
-
         const graphQlClient = setupGraphQlClient(env)
+
         const productData = await getProductData(graphQlClient, name)
+        const formattedProductData = getFormattedProductData(productData)
+        const sortedProductData = sortProductData(formattedProductData)
 
-        const formattedProductData = await getFormattedProductData(productData)
-        const sortedProductData = await getSortedProductData(formattedProductData)
-
-        for (const product of sortedProductData) {
-            console.log(product)
-        }
+        displayProductData(sortedProductData, name)
 
     } catch(e) {
-        console.error(e)
+        console.error(`Error: ${e.message}`)
+        process.exit(1)
     }
 }
 
