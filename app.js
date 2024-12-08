@@ -4,11 +4,10 @@ import '@shopify/shopify-api/adapters/node'
 import {createStorefrontApiClient} from '@shopify/storefront-api-client';
 
 /*
- * typedef {{STORE_DOMAIN: string, ADMIN_TOKEN: string, STOREFRONT_TOKEN: string}} Env
+ * typedef {{STORE_DOMAIN: string, API_VERSION: string, STOREFRONT_TOKEN: string}} Env
  * typedef {{title: string, price: number, currencyCode: string} ProductVariant
  */
 
-const API_VERSION = "2024-10"
 const PRODUCT_LIMIT = 250
 const VARIANT_LIMIT = 250
 
@@ -38,7 +37,7 @@ const CURRENCY_SYMBOLS = {
 /* 
  * Gets name arg from the --name flag.
  *
- * @return {string}
+ * @returns {string}
  *
  * @throws Will throw an error when --name flag isn't present
  * @throws Will throw an error when no name value proceeds --name flag
@@ -62,7 +61,7 @@ function getNameArg() {
 /* 
  * Gets envirenment variables for required fields
  *
- * @return {Env}
+ * @returns {Env}
  *
  * @throws an error per each if any field is missing
  */
@@ -73,8 +72,8 @@ function getEnv() {
         throw new Error('STORE_DOMAIN environment variable is required.')
     }
 
-    if (!env.ADMIN_TOKEN) {
-        throw new Error('ADMIN_TOKEN environment variable is required.')
+    if (!env.API_VERSION) {
+        throw new Error('API_VERSION environment variable is required.')
     }
 
     if (!env.STOREFRONT_TOKEN) {
@@ -83,7 +82,7 @@ function getEnv() {
 
     return {
         STORE_DOMAIN: env.STORE_DOMAIN,
-        ADMIN_TOKEN: env.ADMIN_TOKEN,
+        API_VERSION: env.API_VERSION,
         STOREFRONT_TOKEN: env.STOREFRONT_TOKEN
     }
 }
@@ -93,11 +92,11 @@ function getEnv() {
  *
  * @param {Env}
  *
- * @return {object} representing the GraphQL client
+ * @returns {object} representing the GraphQL client
  */
 function setupGraphQlClient(env) {
     return createStorefrontApiClient({
-        apiVersion: API_VERSION,
+        apiVersion: env.API_VERSION,
         storeDomain: env.STORE_DOMAIN,
         publicAccessToken: env.STOREFRONT_TOKEN
     });
@@ -111,7 +110,7 @@ function setupGraphQlClient(env) {
  *
  * @throws GraphQL exception messages
  *
- * @return {object} data segment of the Shopify data query
+ * @returns {object} data segment of the Shopify data query
  */
 async function getProductData(client, name) {
     const productQuery = `
@@ -158,7 +157,7 @@ async function getProductData(client, name) {
  *
  * @param {object} Product data as returned by Shopify
  *
- * @return {[ProductVariant]} formatted product information
+ * @returns {[ProductVariant]} formatted product information
  */
 function formatProductData(productData) {
     const formattedProductData = []
@@ -181,7 +180,7 @@ function formatProductData(productData) {
  *
  * @param {[ProductVariant]} formatted product data
  *
- * @return {[ProductVariant]} formatted product information
+ * @returns {[ProductVariant]} formatted product information
  */
 function sortProductData(formattedProductData) {
     return [...formattedProductData].sort((a, b) => a.price - b.price);
@@ -192,14 +191,14 @@ function sortProductData(formattedProductData) {
  *
  * @param {string} currency code 
  *
- * @return {string} symbol
+ * @returns {string} symbol
  */
 function getCurrencySymbol(currencyCode) {
     return CURRENCY_SYMBOLS[currencyCode] || "$"
 }
 
 /* 
- * Displays our prouduct information.
+ * Displays our product information.
  * If no data is returned from Shopify or the previous functions, displays a friendly message informing the user.
  *
  * @param {[productData]} The sorted and formatted product data.
@@ -207,7 +206,7 @@ function getCurrencySymbol(currencyCode) {
  */
 function displayProductData(productData, name) {
     if (!productData.length) {
-        console.log(`No prouduct data was found for the search string: ${name}`)
+        console.log(`No product data was found for the search string: ${name}`)
         return
     }
 
