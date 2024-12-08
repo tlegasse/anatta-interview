@@ -64,11 +64,11 @@ function getEnv() {
 /*
  *
  */
-function setupGraphQlClient() {
+function setupGraphQlClient(env) {
     const client = createStorefrontApiClient({
-        storeDomain: 'http://your-shop-name.myshopify.com',
+        storeDomain: env.STORE_DOMAIN,
         apiVersion: apiVersion,
-        publicAccessToken: 'your-storefront-public-access-token',
+        publicAccessToken: env.STOREFRONT_TOKEN,
         CustomFetchApi: nodeFetch
     });
 
@@ -76,18 +76,96 @@ function setupGraphQlClient() {
 }
 
 /*
- *
+ * 
  */
-function getProductData() {
+async function getProductData(client, name) {
+    const productQuery = `
+        {
+            products(first: 10, query:"title:${name}*") {
+                edges {
+                    node {
+                        title
+                        variants(first: 250) {
+                            edges {
+                                node {
+                                    id
+                                    title
+                                    priceV2 {
+                                        amount
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    `;
 
+    const {data, errors, extensions} = await client.request(productQuery, {
+        variables: {
+            name: name,
+        },
+    });
+
+    if (errors?.graphQLErrors) {
+        throw new Error(
+            'There was an error while processing this request: ' +
+            JSON.stringify(errors)
+        )
+    }
+
+    return data
 }
 
-function main() {
+/*
+ *
+ */
+async function getFormattedProductData(productData) {
+    const formattedProductData = []
+
+    for (const product of productData.products.edges) {
+        for (const variant of product.node.variants.edges) {
+            formattedProductData.push({
+                title: product.node.title + ' ' + variant.node.title,
+                price: parseFloat(variant.node.priceV2.amount)
+            })
+        }
+    }
+    
+    return formattedProductData
+}
+
+async function getSortedProductData(formattedProductData) {
+    const compareFn = function(a, b) {
+        if (a.price < b.price) {
+            return -1;
+        } else if (b.price < a.price) {
+            return 1;
+        }
+        // a must be equal to b
+        return 0;
+    }
+
+    console.log(formattedProductData)
+
+    return formattedProductData.sort(compareFn) 
+}
+
+async function main() {
     try {
         const name = getNameArg()
         const env = getEnv()
 
-        const graphQlClient = setupGraphQlClient()
+        const graphQlClient = setupGraphQlClient(env)
+        const productData = await getProductData(graphQlClient, name)
+
+        const formattedProductData = await getFormattedProductData(productData)
+        const sortedProductData = await getSortedProductData(formattedProductData)
+
+        for (const product of sortedProductData) {
+            console.log(product)
+        }
 
     } catch(e) {
         console.error(e)
