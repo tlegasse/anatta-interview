@@ -44,4 +44,5 @@ A shirt - 4 / red - price $35.00
 A shirt - 4 / blue - price $35.00
 ```
 
-P.s. Hire me!
+---
+P.s. Hire me! 🐱
