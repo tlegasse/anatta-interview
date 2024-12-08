@@ -11,7 +11,7 @@ To install this project, clone the repository and execute the following command 
 `npm install`
 
 This project leverages environment variables collected from a .env file in the root directory.
-The required envirenment variables are as follows, please replace the values with your own.
+The required environment variables are as follows, please replace the values with your own.
 
 ```
 STORE_DOMAIN=some-domain.myshopify.com
@@ -20,7 +20,7 @@ API_VERSION=2024-10
 ```
 
 # Usage
-To search through your Shopify store for matching products, use the --name flag in conjunction with a provided search strig and pass to the command executed:
+To search through your Shopify store for matching products, use the --name flag in conjunction with a provided search string and pass to the command executed:
 `node app.js --name "{some search string, E.g. 'shirt'}"`
 
 Provided that there are products in your store, you will find output resembling the following:
@@ -44,4 +44,4 @@ A shirt - 4 / red - price $35.00
 A shirt - 4 / blue - price $35.00
 ```
 
-P.s. hire me
+P.s. Hire me!
